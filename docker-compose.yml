@@ -1,0 +1,21 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: litellm_nginx
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+
+    networks:
+      - shared_net
+
+networks:
+  shared_net:
+    external: true
