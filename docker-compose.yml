@@ -1,7 +1,7 @@
 services:
   nginx:
     image: nginx:latest
-    container_name: litellm_nginx
+    container_name: aigateway_nginx
 
     restart: unless-stopped
 
