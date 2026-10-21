@@ -317,7 +317,7 @@ static ngx_command_t  ngx_http_grpc_commands[] = {
       ngx_conf_set_size_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_grpc_loc_conf_t, upstream.buffer_size),
-      NULL },
+      &ngx_conf_size_nonzero_post },
 
     { ngx_string("grpc_read_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -811,6 +811,9 @@ ngx_http_grpc_create_request(ngx_http_request_t *r)
     /* :authority header */
 
     host.len = 0;
+#if (NGX_SUPPRESS_WARN)
+    host.data = NULL;
+#endif
 
     if (glcf->host_value
         && ngx_http_complex_value(r, glcf->host_value, &host) != NGX_OK)
@@ -3864,6 +3867,12 @@ ngx_http_grpc_parse_window_update(ngx_http_request_t *r,
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "grpc window update: %ui", ctx->window_update);
+
+    if (ctx->window_update == 0) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "upstream sent zero window update");
+        return NGX_ERROR;
+    }
 
     if (ctx->stream_id) {
 

@@ -336,7 +336,7 @@ static ngx_command_t  ngx_http_fastcgi_commands[] = {
       ngx_conf_set_size_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_fastcgi_loc_conf_t, upstream.buffer_size),
-      NULL },
+      &ngx_conf_size_nonzero_post },
 
     { ngx_string("fastcgi_pass_request_headers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -915,7 +915,8 @@ ngx_http_fastcgi_create_request(ngx_http_request_t *r)
                 continue;
             }
 
-            params_len += 1 + key_len + ((val_len > 127) ? 4 : 1) + val_len;
+            params_len += ((key_len > 127) ? 4 : 1) + key_len
+                          + ((val_len > 127) ? 4 : 1) + val_len;
         }
 
         len += params_len;
@@ -1083,7 +1084,7 @@ ngx_http_fastcgi_create_request(ngx_http_request_t *r)
         while (*(uintptr_t *) le.ip) {
 
             lcode = *(ngx_http_script_len_code_pt *) le.ip;
-            key_len = (u_char) lcode(&le);
+            key_len = lcode(&le);
 
             lcode = *(ngx_http_script_len_code_pt *) le.ip;
             skip_empty = lcode(&le);
@@ -1107,13 +1108,23 @@ ngx_http_fastcgi_create_request(ngx_http_request_t *r)
                 continue;
             }
 
-            if (ngx_http_script_check_length(&e, 1 + ((val_len > 127) ? 4 : 1))
+            if (ngx_http_script_check_length(&e,
+                                             ((key_len > 127) ? 4 : 1)
+                                             + ((val_len > 127) ? 4 : 1))
                 != NGX_OK)
             {
                 return NGX_ERROR;
             }
 
-            *e.pos++ = (u_char) key_len;
+            if (key_len > 127) {
+                *e.pos++ = (u_char) (((key_len >> 24) & 0x7f) | 0x80);
+                *e.pos++ = (u_char) ((key_len >> 16) & 0xff);
+                *e.pos++ = (u_char) ((key_len >> 8) & 0xff);
+                *e.pos++ = (u_char) (key_len & 0xff);
+
+            } else {
+                *e.pos++ = (u_char) key_len;
+            }
 
             if (val_len > 127) {
                 *e.pos++ = (u_char) (((val_len >> 24) & 0x7f) | 0x80);

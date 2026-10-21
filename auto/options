@@ -41,6 +41,8 @@ EVENT_FOUND=NO
 EVENT_SELECT=NO
 EVENT_POLL=NO
 
+CONTROL_API=NO
+
 USE_THREADS=NO
 
 NGX_FILE_AIO=NO
@@ -75,6 +77,7 @@ HTTP_AUTH_REQUEST=NO
 HTTP_MIRROR=YES
 HTTP_USERID=YES
 HTTP_SLICE=NO
+HTTP_JSON=NO
 HTTP_AUTOINDEX=YES
 HTTP_RANDOM_INDEX=NO
 HTTP_STATUS=NO
@@ -175,8 +178,6 @@ USE_GEOIP=NO
 NGX_GOOGLE_PERFTOOLS=NO
 NGX_CPP_TEST=NO
 
-SO_COOKIE_FOUND=NO
-
 NGX_LIBATOMIC=NO
 
 NGX_CPU_CACHE_LINE=
@@ -224,6 +225,8 @@ do
 
         --without-quic_bpf_module)       QUIC_BPF=NONE              ;;
 
+        --with-control-api)              CONTROL_API=YES            ;;
+
         --with-ipv6)
             NGX_POST_CONF_MSG="$NGX_POST_CONF_MSG
 $0: warning: the \"--with-ipv6\" option is deprecated"
@@ -263,6 +266,7 @@ $0: warning: the \"--with-ipv6\" option is deprecated"
         --with-http_secure_link_module)  HTTP_SECURE_LINK=YES       ;;
         --with-http_degradation_module)  HTTP_DEGRADATION=YES       ;;
         --with-http_slice_module)        HTTP_SLICE=YES             ;;
+        --with-http_json_module)         HTTP_JSON=YES              ;;
 
         --without-http_charset_module)   HTTP_CHARSET=NO            ;;
         --without-http_gzip_module)      HTTP_GZIP=NO               ;;
@@ -286,7 +290,7 @@ $0: warning: the \"--with-ipv6\" option is deprecated"
         --without-http_tunnel_module)    HTTP_TUNNEL=NO             ;;
         --without-http_memcached_module) HTTP_MEMCACHED=NO          ;;
         --without-http_limit_conn_module) HTTP_LIMIT_CONN=NO        ;;
-        --without-http_limit_req_module) HTTP_LIMIT_REQ=NO         ;;
+        --without-http_limit_req_module) HTTP_LIMIT_REQ=NO          ;;
         --without-http_empty_gif_module) HTTP_EMPTY_GIF=NO          ;;
         --without-http_browser_module)   HTTP_BROWSER=NO            ;;
         --without-http_upstream_hash_module) HTTP_UPSTREAM_HASH=NO  ;;
@@ -466,6 +470,8 @@ cat << END
   --with-poll_module                 enable poll module
   --without-poll_module              disable poll module
 
+  --with-control-api                 enable control API
+
   --with-threads                     enable thread pool support
 
   --with-file-aio                    enable file AIO support
@@ -495,6 +501,7 @@ cat << END
   --with-http_secure_link_module     enable ngx_http_secure_link_module
   --with-http_degradation_module     enable ngx_http_degradation_module
   --with-http_slice_module           enable ngx_http_slice_module
+  --with-http_json_module            enable ngx_http_json_module
   --with-http_stub_status_module     enable ngx_http_stub_status_module
 
   --without-http_charset_module      disable ngx_http_charset_module

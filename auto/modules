@@ -56,6 +56,23 @@ if [ $NGX_TEST_BUILD_SOLARIS_SENDFILEV = YES ]; then
 fi
 
 
+if [ $CONTROL_API = YES ]; then
+
+    if [ "$NGX_PLATFORM" = win32 ]; then
+        cat << END
+
+$0: --with-control-api is not supported on Windows
+
+END
+        exit 1
+    fi
+
+    have=NGX_CONTROL_API . auto/have
+    CORE_DEPS="$CORE_DEPS $UNIX_CONTROL_API_DEPS"
+    CORE_SRCS="$CORE_SRCS $UNIX_CONTROL_API_SRCS"
+fi
+
+
 if [ $HTTP = YES ]; then
     HTTP_MODULES=
     HTTP_DEPS=
@@ -104,6 +121,12 @@ if [ $HTTP = YES ]; then
 
     if [ $HTTP_V2 = YES -o $HTTP_V3 = YES ]; then
         HTTP_SRCS="$HTTP_SRCS $HTTP_HUFF_SRCS"
+    fi
+
+
+    if [ $HTTP_V2 = YES ]; then
+        HTTP_DEPS="$HTTP_DEPS $HTTP_PRIORITY_DEPS"
+        HTTP_SRCS="$HTTP_SRCS $HTTP_PRIORITY_SRCS"
     fi
 
 
@@ -634,6 +657,17 @@ if [ $HTTP = YES ]; then
         ngx_module_srcs=src/http/modules/ngx_http_status_module.c
         ngx_module_libs=
         ngx_module_link=$HTTP_STATUS
+
+        . auto/module
+    fi
+
+    if [ $HTTP_JSON = YES ]; then
+        ngx_module_name=ngx_http_json_module
+        ngx_module_incs=
+        ngx_module_deps=
+        ngx_module_srcs=src/http/modules/ngx_http_json_module.c
+        ngx_module_libs=
+        ngx_module_link=$HTTP_JSON
 
         . auto/module
     fi
@@ -1421,11 +1455,11 @@ if [ $USE_OPENSSL_QUIC = YES ]; then
 
     . auto/module
 
-    if [ $QUIC_BPF = YES -a $SO_COOKIE_FOUND = YES ]; then
+    if [ $QUIC_BPF = YES ]; then
         ngx_module_type=CORE
         ngx_module_name=ngx_quic_bpf_module
         ngx_module_incs=
-        ngx_module_deps=
+        ngx_module_deps=src/event/quic/ngx_event_quic_bpf.h
         ngx_module_srcs="src/event/quic/ngx_event_quic_bpf.c \
                          src/event/quic/ngx_event_quic_bpf_code.c"
         ngx_module_libs=

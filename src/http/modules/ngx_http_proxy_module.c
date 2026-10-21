@@ -394,7 +394,7 @@ static ngx_command_t  ngx_http_proxy_commands[] = {
       ngx_conf_set_size_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.buffer_size),
-      NULL },
+      &ngx_conf_size_nonzero_post },
 
     { ngx_string("proxy_read_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -1226,6 +1226,9 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
     ctx = ngx_http_get_module_ctx(r, ngx_http_proxy_module);
 
     host.len = 0;
+#if (NGX_SUPPRESS_WARN)
+    host.data = NULL;
+#endif
 
     if (plcf->host_value
         && ngx_http_complex_value(r, plcf->host_value, &host) != NGX_OK)
@@ -4470,12 +4473,14 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #if (NGX_PCRE)
         || clcf->regex
 #endif
+        || clcf->predicate
         || clcf->noname)
     {
         if (plcf->vars.uri.len) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "\"proxy_pass\" cannot have URI part in "
                                "location given by regular expression, "
+                               "or inside predicate location, "
                                "or inside named location, "
                                "or inside \"if\" statement, "
                                "or inside \"limit_except\" block");
